@@ -2,24 +2,25 @@
 # skompilowana domyślna sprawdzaczka
 DEFAULT_CHECKER='/usr/bin/myscripts/standard_compare'
 
-VERSION=1.7
-DATE=16-01-11
+VERSION=1.7.1
+DATE=16-10-2012
 
 function usage {
 	cat << EOF
 Parametry obowiązkowe:
  -s, --solution    rozwiązanie do sprawdzenia LUB
  -S, --sol-exec    skompilowane rozwiązanie
- -i, --input       plik(i) wejściowe
- -o, --output      plik(i) wyjściowe
+ -i, --input       plik[i] .in / katalog z plikami .in
+ -o, --output      plik[i] .out / katalog z plikami .out
 Parametry opcjonalne:
- -c, --compare     niestandardowa sprawdzaczka
- -C, --comp-exec   skompilowana sprawdzaczka
- -e, --no-errors   sprawdzanie do pierwszego bledu
- -m, --mem-limit   limit pamięci (kiB, z dopiskiem M MiB)
- -t, --time-limit  limit czasowy (s)
- -u, --summary     bez szczegółów dla pojedynczych testów
- -N, --no-delete   bez usuwania plików tymczasowych
+ -c, --compare       niestandardowa sprawdzaczka
+ -C, --comp-exec     skompilowana sprawdzaczka
+ -e, --no-errors     sprawdzanie do pierwszego bledu
+ -m, --mem-limit     limit pamięci (kiB, z dopiskiem M MiB)
+ -t, --time-limit    limit czasowy (s)
+ -u, --summary       bez szczegółów dla pojedynczych testów
+ -N, --no-delete     bez usuwania plików tymczasowych
+ -E, --check-stderr  porownaj tez wyjscie bledu (pliki .err obok .out)
 
 check_sol v${VERSION} (${DATE}), cc-by/beerware quezak@gmail.com
 EOF
@@ -44,6 +45,7 @@ while [ $# -gt 0 ]; do
 		-e|--no-errors	) noerr=1;;
 		-u|--summary	) shout=1;;
 		-N|--no-delete	) nodel=1;;
+        -E|--check-stderr) check_stderr=1;;
 		*					) echo "niepoprawna opcja: $1"; usage; exit 1;;
 	esac
 	shift
@@ -59,7 +61,7 @@ if [ "$out" == "" ]; then echo "nie podano plików wyjściowych"; usage; exit 1;
 if [ -d "$inp" ]; then inp="${inp%/}/*.in"; fi
 if [ "$out" == "${out%/}" ]; then out="$out/"; fi
 
-######################  kompilacja solucji
+######################  kompilacja rozwiazania
 if [ "$sol" != "EXE" ]; then
 	src="${sol%\/*}"
 	if [ "$src" != "$sol" ]; then src="$src/";
@@ -145,6 +147,10 @@ olims=$(ulimit -Ss)
 olimv=$(ulimit -Sv)
 olimt=$(ulimit -St)
 rm -f "$sol.res" "$sol.tim" "$sol.tmp"
+stderr_outf='/dev/null'
+if [ -n "$check_stderr" ]; then
+    stderr_outf="$sol.errtmp"
+fi
 
 ######################  odpalamy machine
 for x in $inp; do
@@ -164,7 +170,7 @@ for x in $inp; do
 		ulimit -Sv $ml
 	fi
 	if [ -n "$tl" ]; then ulimit -St $tl; fi
-	/usr/bin/time -f '%e' -o "$sol.tim" "$exe" < "$x" > "$sol.tmp" 2>/dev/null &
+	/usr/bin/time -f '%e' -o "$sol.tim" "$exe" < "$x" > "$sol.tmp" 2>"$stderr_outf" &
 	pid=""
 	pid=`ps -C "\`basename $exe\`" -o pid h | sed 's/[^0-9]//g'`
 	tc=0
@@ -263,21 +269,35 @@ for x in $inp; do
 					echo -n "      "
 					tail -1 "$sol.res"
 				else echo -en "\033[30m\033[41mW\033[0m"; fi
-				wan=$[wan+1]
-				if [ $noerr -eq 1 ]; then break; fi
-			else 
-				##############################  AC
-				if [ -z "$shout" ]; then
-					echo -e " \033[30m\033[42m AC \033[0m"
-				else echo -en "\033[30m\033[42mA\033[0m"; fi
-				acc=$[acc+1]
-			fi ## AC
-		fi ## WA
-	fi ## RE
-	if [ -n "$shout" ] && [ $[bt%cls] -eq 0 ]; then echo ""; fi
-	if [ -z "$nodel" ] || [ $bt -lt $nt ]; then
-		rm -f "$sol.tmp" "$sol.tim" "$sol.res";
-	fi
+                wan=$[wan+1]
+                if [ $noerr -eq 1 ]; then break; fi
+            else
+                ########################## WA na stderr
+                if [ -n "$check_stderr" ]; then
+                    "$comp" "$x" "$sol.errtmp" "$out$tes.err" > "$sol.errres"
+                fi
+                if [ -n "$check_stderr" ] && [ "`head -1 "$sol.errres"`" != "100" ]; then
+                    if [ -z "$shout" ]; then
+                        echo -e " \033[30m\033[41m WA \033[0m"
+                        echo -n "      [stderr] "
+                        tail -1 "$sol.errres"
+                    else echo -en "\033[30m\033[41mW\033[0m"; fi
+                    wan=$[wan+1]
+                    if [ $noerr -eq 1 ]; then break; fi
+                else
+                    ##############################  AC
+                    if [ -z "$shout" ]; then
+                        echo -e " \033[30m\033[42m AC \033[0m"
+                    else echo -en "\033[30m\033[42mA\033[0m"; fi
+                    acc=$[acc+1]
+                fi ## AC
+            fi ## WA [stderr]
+        fi ## WA
+    fi ## RE
+    if [ -n "$shout" ] && [ $[bt%cls] -eq 0 ]; then echo ""; fi
+    if [ -z "$nodel" ] || [ $bt -lt $nt ]; then
+        rm -f "$sol.tmp" "$sol.tim" "$sol.res";
+    fi
 done
 
 ######################  podsumowanie
@@ -317,5 +337,5 @@ fi
 
 ######################  cleanup
 if [ -z "$nodel" ]; then
-	rm -f "$sol.res" "$sol.e" "$sol.comp" "$sol.tim" "$sol.tmp"
+	rm -f "$sol.res" "$sol.errres" "$sol.e" "$sol.comp" "$sol.tim" "$sol.tmp" "$sol.errtmp"
 fi
