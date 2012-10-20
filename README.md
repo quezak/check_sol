@@ -40,6 +40,9 @@ znak wyniku testu, analogicznie jak wyżej.
 Po zakończeniu testowania wyświetlane jest podsumowanie -- liczba wyników różnego rodzaju,
 maksymalny czas oraz pamięć dla testu.
 
+W pliku `check_sol_example.png` zobaczyć można przykład wyjścia skryptu dla danych spreparowanych
+tak, by pokazywać różne możliwe przypadki.
+
 Parametry uruchomienia
 ----------------------
 * `-s | --solution PLIK` kod programu do sprawdzenia. Obsługiwane są pliki `.cpp`, `.cc`, `.c`, `.pas`,
