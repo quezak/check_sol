@@ -1,9 +1,34 @@
 #!/bin/bash
-# skompilowana domyślna sprawdzaczka
-DEFAULT_CHECKER='/usr/bin/myscripts/standard_compare'
 
-VERSION=1.8
-DATE=16-10-2012
+############### dane o wersji
+VERSION=1.85
+DATE=20-10-2012
+
+################ konfiguracja
+DEFAULT_CHECKER='/usr/bin/myscripts/standard_compare'
+C="gcc"
+CFLAGS="-O2 -Wall -Wunused -Wformat -Wfloat-equal -Wsequence-point"
+CXX="g++"
+CXXFLAGS="$CFLAGS -Weffc++ -std=c++0x"
+PPC="ppc386"
+PASFLAGS="-O2 -XS -Xt"
+# kolorki
+C_RST="$(echo -en "\033[m")"
+C_DRK="$(echo -en "${C_RST}\033[1;30m")"
+C_EMP="$(echo -en "${C_RST}\033[1;37m")"
+C_MEM="$(echo -en "${C_RST}\033[0;36m")"
+C_TIM="$(echo -en "${C_RST}\033[0;33m")"
+C_AC="$(echo -en "\033[30m\033[42m")"
+C_TL="$(echo -en "\033[31m\033[43m")"
+C_ML="$(echo -en "\033[31m\033[46m")"
+C_WA="$(echo -en "\033[30m\033[41m")"
+C_RE="$(echo -en "\033[31m\033[47m")"
+C_INT="$(echo -en "\033[31m\033[40m")"
+# szerokosc pol
+FWD_COL=13
+FWD_MEM=$[10+FWD_COL]
+FWD_TIM=$[8+FWD_COL]
+FWD_RES=$[5+FWD_COL]
 
 function usage {
 cat << EOF
@@ -68,34 +93,36 @@ done
 if [ -z "$solution" ] && [ -z "$compiled_solution" ]; then 
     echo "nie podano rozwiązania do oceny"; usage; exit 1; 
 fi
-if [ "$input_files" == "" ]; then echo "nie podano plików wejściowych"; usage; exit 1; fi
-if [ "$output_files" == "" ]; then echo "nie podano plików wyjściowych"; usage; exit 1; fi
-if [ -d "$input_files" ]; then input_files="${input_files%/}/*.in"; fi
-if [ "$output_files" == "${output_files%/}" ]; then output_files="$output_files/"; fi
+if [ -z "$input_files" ]; then 
+    echo "nie podano plików wejściowych"; usage; exit 1; 
+fi
+if [ -z "$output_files" ]; then 
+    echo "nie podano plików wyjściowych"; usage; exit 1; 
+fi
+if [ -d "$input_files" ]; then 
+    input_files="${input_files%/}/*.in"; 
+fi
+if [ "$output_files" == "${output_files%/}" ]; then 
+    output_files="$output_files/"; 
+fi
 
 ######################  kompilacja rozwiazania
 if [ -z "$compiled_solution" ]; then
-    src="${solution%\/*}"
-    if [ "$src" != "$solution" ]; then src="$src/";
-    else src=""; fi
-    echo "Kompilacja programu `basename "$solution"`"
+    src_file="$solution"
+    echo "Kompilacja programu $(basename "$solution")"
     case "${solution/*.}" in
         cpp)
-            solution="`basename "$solution" .cpp`"
-            src="$src$solution.cpp"
-            g++ -O2 -static -Wall -m32 -Weffc++ -Wunused -Wformat -Wfloat-equal -Wsequence-point -lm "$src" -o "$solution.e";;
+            solution="$(basename "$solution" .cpp)"
+            $CXX $CXXFLAGS "$src_file" -o "$solution.e";;
         c)
-            solution="`basename "$solution" .c`"
-            src="$src$solution.c"
-            gcc -O2 -static -m32 -lm "$src" -o "$solution.e";;
+            solution="$(basename "$solution" .c)"
+            $C $CFLAGS "$src_file" -o "$solution.e";;
         cc)
-            solution="`basename "$solution" .cc`"
-            src="$src$solution.cc"
-            g++ -O2 -static -Wall -m32 -Weffc++ -Wunused -Wformat -Wfloat-equal -Wsequence-point -lm "$src" -o "$solution.e";;
+            solution="$(basename "$solution" .cc)"
+            $CXX $CXXFLAGS "$src_file" -o "$solution.e";;
         pas)
-            solution="`basename "$solution" .pas`"
-            src="$src$solution.pas"
-            ppc386 -O2 -XS -Xt "$src" -o"./$solution.e";;
+            solution="$(basename "$solution" .pas)"
+            $PPC $PASFLAGS "$src_file" -o"./$solution.e";;
     esac
     if [ $? -gt 0 ]; then echo "kompilacja rozwiąznia się nie powiodła!"; exit 2; fi
     rm -f "$solution.o"
@@ -111,19 +138,15 @@ fi
 if [ -n "$compiled_compare" ]; then
     compare="$compiled_compare"
     if [ "${compare:0:1}" != "/" ]; then compare="./$compare"; fi
+elif [ -n "$compare" ]; then 
+    src_file="$compare"
+    compare="$(basename "$compare" .cpp)"
+    echo "kompilacja sprawdzaczki"
+    g++ -O2 "$src_file" -o "$solution.compare"
+    if [ $? -gt 0 ]; then echo "kompilacja sprawdzaczki się nie powiodła!"; exit 2; fi
+    compare="./$solution.compare"
 else
-    if [ -z "$compare" ]; then compare="$DEFAULT_CHECKER"
-    else
-        src="${compare%\/*}"
-        if [ "$src" != "$compare" ]; then src="$src/";
-        else src=""; fi
-        compare="`basename "$compare" .cpp`"
-        src="$src$compare.cpp"
-        echo "kompilacja sprawdzaczki"
-        g++ -O2 "$src" -o "$solution.compare"
-        if [ $? -gt 0 ]; then echo "kompilacja sprawdzaczki się nie powiodła!"; exit 2; fi
-        compare="./$solution.compare"
-    fi
+    compare="$DEFAULT_CHECKER"
 fi
 
 ######################  precaching resources
@@ -131,7 +154,7 @@ tests_cnt=0
 max_test_name_l=0
 for x in $input_files; do
     tests_cnt=$[tests_cnt+1]
-    y="`basename "$x" .in`"
+    y="$(basename "$x" .in)"
     if [ ${#y} -gt $max_test_name_l ]; then max_test_name_l=${#y}; fi
 done
 echo
@@ -139,22 +162,22 @@ echo
 output_files="${output_files%\/*}"
 if [ -n "$output_files" ]; then output_files="$output_files/"; fi
 cur_test=0
-max_mem=0
-max_time_sec=0
-max_time_frc=0
+max_mem=0 # [kiB]
+max_time=0 # [sec/100]
 cnt_acc=0
 cnt_wan=0
-cnt_cle=0
+cnt_tle=0
 cnt_mle=0
 cnt_rte=0
 if [ -z "$short_output" ]; then
-    echo -en "\033[1;30mTEST\033[0m"
-    printf " % $[max_test_name_l+${#tests_cnt}+${#tests_cnt}]s" "NAZWA "
-    echo -e "   \033[0;36mPAMIĘĆ\033[0m  \033[0;33mCZAS\033[0m  WYNIK"
+    echo -n "${C_DRK}TEST${C_RST}"
+    printf "% $[max_test_name_l+${#tests_cnt}*2]s" "NAZWA"
+    printf "  % ${FWD_MEM}s  % ${FWD_TIM}s  %  ${FWD_RES}s\n" "${C_MEM}PAMIEC${C_RST}"\
+        "${C_TIM}CZAS${C_RST}" "${C_EMP}WYNIK${C_RST}"
 else
-    echo -e "\033[1;30m`printf "% $[${#tests_cnt}+${#tests_cnt}+3]s" "TEST"`\033[0m WYNIKI"
-    line_width=`tput cols`
-    if [ $line_width -lt $[${#tests_cnt}+${#tests_cnt}+104] ]; then line_width=50; else line_width=100; fi
+    printf "${C_DRK}% $[${#tests_cnt}*2-1]sTEST${C_RST} WYNIKI\n" ""
+    line_width=$(tput cols)
+    if [ $line_width -lt $[${#tests_cnt}*2+104] ]; then line_width=50; else line_width=100; fi
 fi
 old_lim_s=$(ulimit -Ss)
 old_lim_v=$(ulimit -Sv)
@@ -168,32 +191,33 @@ fi
 ######################  odpalamy machine
 for x in $input_files; do
     cur_test=$[cur_test+1]
-    test_name="`basename "$x" .in`"
+    test_name="$(basename "$x" .in)"
     if [ -z "$short_output" ] || [ $[cur_test%line_width] -eq 1 ]; then
-        if [ ${#cur_test} -lt ${#tests_cnt} ]; then
-            test_no=`printf "[% ${#tests_cnt}d/$tests_cnt]" $cur_test`
-        else 
-            test_no=`printf "[%d/$tests_cnt]" $cur_test`
-        fi
-        echo -en "\033[1;30m$test_no\033[0m "
+        printf "${C_DRK}[% ${#tests_cnt}s/$tests_cnt]${C_RST}" "$cur_test"
     fi
-    if [ -z "$short_output" ]; then printf "% ${max_test_name_l}s: " "$test_name"; fi
+    if [ -z "$short_output" ]; then printf " % ${max_test_name_l}s: " "$test_name"; fi
     if [ -n "$mem_limit" ]; then 
         ulimit -Ss $mem_limit
         ulimit -Sv $mem_limit
     fi
-    if [ -n "$time_limit" ]; then ulimit -St $time_limit; fi
+    if [ -n "$time_limit" ]; then 
+        ulimit -St $time_limit
+    fi
     /usr/bin/time -f '%e' -o "$solution.tim" "$solution_exe" < "$x" > "$solution.tmp" 2>"$stderr_outf" &
-    pid=""
-    pid=`ps -C "\`basename $solution_exe\`" -o pid h | sed 's/[^0-9]//g'`
+    pid=$(ps -C "$(basename $solution_exe)" -o pid h | tr -dc 0-9)
     time_excd=0
     mem_usage=""
+    test_res=""
+    test_res_details=""
+    mem_res=""
+    time_res=""
     ########################## oczekiwanie na zakończenie
     if [ -n "$pid" ]; then
         while [ -e "/proc/$pid" ]; do
-            #			cur_mem=`ps -p $pid -o vsz h 2> /dev/null | sed 's/[^0-9]//g'`
-            cur_mem=`cat /proc/$pid/stat 2> /dev/null | awk '{print $23}'`
-            if [ -n "$cur_mem" ]; then mem_usage=$[new_mem/1024]; fi
+            #cur_mem=$(ps -p $pid -o vsz h | tr -dc 0-9)
+            #cur_mem=$(cat /proc/$pid/stat 2> /dev/null | awk '{print $23}')
+            cur_mem=$(grep 'VmPeak' /proc/$pid/status 2>/dev/null | tr -dc 0-9)
+            if [ -n "$cur_mem" ]; then mem_usage=$cur_mem; fi
             sleep 0.05
         done
     fi
@@ -201,116 +225,121 @@ for x in $input_files; do
     ulimit -Sv $old_lim_v
     ulimit -St $old_lim_t
     while [ ! -s "$solution.tim" ]; do sleep 0.1; done
-    time_usage=`tail -1 "$solution.tim"`
-    while [ -z "$time_usage" ]; do
-        sleep 0.1
-        time_usage=`tail -1 "$solution.tim"`
-    done
-    kill_signal="0" # TODO sane wczytywanie
-    if [ "`head -1 $solution.tim`" != "`tail -1 $solution.tim`" ]; then
-        kill_signal="`head -1 "$solution.tim"`"
-        kill_signal=${kill_signal/* }
+    while [ ! -e "$solution.tmp" ]; do sleep 0.1; done
+    if [ -n "$mem_usage" ] && [ $mem_usage -gt $max_mem ]; then 
+        max_mem=$mem_usage; 
     fi
-    if [ -n "$mem_limit" ] && [ $kill_signal -eq 6 ] && ( [ ! -n "$mem_usage" ] || [ $mem_usage -le $mem_limit ] ); then
-        mem_usage=$[mem_limit+1]
-    fi
+    time_usage=$(tail -1 "$solution.tim" | tr -dc 0-9 | sed 's/^0\+\(.\)/\1/')
+    kill_signal=$(grep -i 'signal\|sygna' $solution.tim | tr -dc 0-9)
+    if [ -z "$kill_signal" ]; then kill_signal=0; fi
+    ############################## PAMIEC (MLE = kill sygnalem 6:SIGABRT)
     if [ -n "$mem_usage" ] || [ $kill_signal -eq 6 ]; then
-        ############################## MLE
-        mems=`printf '% 7s' "$mem_usage"` # TODO do linii nizej
-        if [ -z "$short_output" ]; then echo -en "\033[0;36m${mems}k\033[0m "; fi
-        if [ $mem_usage -gt $max_mem ]; then max_mem=$mem_usage; fi
-        if [ -n "$mem_limit" ]; then
-            if [ $mem_usage -gt $mem_limit ] || [ $kill_signal -eq 6 ]; then
-                if [ -z "$short_output" ]; then
-                    echo -e "        \033[31m\033[46m ML \033[0m"
-                else echo -en "\033[31m\033[46mM\033[0m"; fi
-                kill $pid &>/dev/null
-                cnt_mle=$[cnt_mle+1]
-                if [ $stop_on_error -eq 1 ]; then break; fi
-                if [ -n "$short_output" ] && [ $[cur_test%line_width] -eq 0 ]; then echo ""; fi
-                continue
-                kill_signal=0
-            fi
-        fi
-    else if [ -z "$short_output" ]; then echo -n "         "; fi; fi
-    ########################## sprawdzenie czasu
-    if [ ${time_usage/.*/} -gt $max_time_sec ] || ( [ ${time_usage/.*/} -eq $max_time_sec ] && [ ${time_usage/*./} -ge $max_time_frc ] ); then
-        max_time_sec=${time_usage/.*/}
-        max_time_frc=${time_usage/*./}
-    fi
-    if [ -n "$time_limit" ]; then
-        if [ ${time_usage/.*/} -gt $time_limit ] || ( [ ${time_usage/.*/} -eq $time_limit ] && [ ${time_usage/*./} -gt 0 ] ) || [ $kill_signal -eq 24 ]; then
-            time_excd="-1"
-            kill_signal=0
-        fi
-    fi
-    ##########################  runtime error
-    if [ $kill_signal -gt 0 ]; then
-        if [ -z "$short_output" ]; then
-            echo -e "        \033[47m\033[31m RE \033[0m"
-            echo -n "      "
-            case $kill_signal in
-                "8" ) echo -e "program zabity sygnałem \033[1;35m8: SIGFPE\033[0m (Floating Point Exception)";;
-            "9" ) echo -e "program zgładzony sygnałem \033[1;31m9: SIGKILL\033[0m";;
-        "11") echo -e "program zabity sygnałem \033[1;36m11: SIGSEGV\033[0m (Segmentation Fault)";;
-    [0-9]*) echo -e "program zabity sygnałem \033[1;37m${kill_signal}\033[0m";;
-*) head -1 "$solution.tim";;
-            esac
-        else echo -en "\033[47m\033[31mR\033[0m"; fi
-        cnt_rte=$[cnt_rte+1]
-        if [ $stop_on_error -eq 1 ]; then break; fi
-    else
-        ###############################  TLE
-        time_usage=`printf '% 5s' "$time_usage"`
-        if [ -z "$short_output" ]; then echo -en "\033[0;33m${time_usage}s\033[0m "; fi
-        if [ -n "$time_limit" ]; then
-            if [ "$time_excd" == "-1" ]; then
-                if [ -z "$short_output" ]; then
-                    echo -e " \033[31m\033[43m TL \033[0m"
-                else echo -en "\033[31m\033[43mT\033[0m"; fi
-                cnt_cle=$[cnt_cle+1]
-                if [ $stop_on_error -eq 1 ]; then break; fi
-            fi
-        fi ## TLE
-        if [ -z "$time_limit" ] || [ "$time_excd" != "-1" ]; then
-            #################################  WA
-            while [ ! -e "$solution.tmp" ]; do sleep 0.1; done
-            "$compare" "$x" "$solution.tmp" "$output_files$test_name.out" > "$solution.res"
-            if [ "`head -1 "$solution.res"`" != "100" ]; then
-                if [ -z "$short_output" ]; then
-                    echo -e " \033[30m\033[41m WA \033[0m"
-                    echo -n "      "
-                    tail -1 "$solution.res"
-                else echo -en "\033[30m\033[41mW\033[0m"; fi
-                cnt_wan=$[cnt_wan+1]
-                if [ $stop_on_error -eq 1 ]; then break; fi
+        if [ $kill_signal -eq 6 ]; then
+            if [ -z "$short_output" ]; then 
+                mem_res="${C_ML}>${mem_limit}k${C_RST}"
+                test_res="${C_ML} ML ${C_RST}"
             else
-                ########################## WA na stderr
-                if [ -n "$check_stderr" ]; then
-                    "$compare" "$x" "$solution.errtmp" "$output_files$test_name.err" > "$solution.errres"
+                test_res="${C_ML}M${C_RST}"
+            fi
+            cnt_mle=$[cnt_mle+1]
+        else
+            mem_res="${C_MEM}${mem_usage}k${C_RST}"
+        fi
+    fi ## PAMIEC
+    ############################### CZAS (TLE = kill sygnalem 24:SIGXCPU)
+    if [ $time_usage -gt $max_time ]; then
+        max_time=${time_usage}
+    fi
+    if [ $kill_signal -eq 24 ]; then
+        if [ -z "$short_output" ]; then
+            time_res="${C_TL}>${time_limit}.00s${C_RST}"
+            test_res="${C_TL} TL ${C_RST}"
+        else 
+            test_res="${C_TL}T${C_RST}"
+        fi
+        cnt_tle=$[cnt_tle+1]
+    else
+        time_res="${C_TIM}$(printf "%d.%02d" "$[time_usage/100]" "$[time_usage%100]")s${C_RST}"
+    fi ## CZAS
+    ########################## BLAD WYKONANIA (kill innym sygnalem)
+    if [ -z "$test_res" ] && [ $kill_signal -gt 0 ]; then
+        if [ -z "$short_output" ]; then
+            test_res="${C_RE} RE ${C_RST}"
+            case $kill_signal in
+                "8" ) 
+                    test_res_details="program zabity sygnałem ${C_EMP}8: SIGFPE${C_RST} (Floating Point Exception)";;
+                "9" ) 
+                    test_res_details="program zgładzony sygnałem ${C_EMP}9: SIGKILL${C_RST}";;
+                "11") 
+                    test_res_details="program zabity sygnałem ${C_EMP}11: SIGSEGV${C_RST} (Segmentation Fault)";;
+                *) 
+                    test_res_details="program zabity sygnałem ${C_EMP}${kill_signal}${C_RST}";;
+            esac
+        else
+            test_res="${C_RE}R${C_RST}"
+        fi
+        cnt_rte=$[cnt_rte+1]
+    fi
+    ############################ sprawdzenie odpowiedzi, skoro program sie zakonczyl normalnie
+    #################################  WA
+    if [ -z "$test_res" ]; then
+        if [ -e "$output_files$test_name.out" ]; then
+            "$compare" "$x" "$solution.tmp" "$output_files$test_name.out" > "$solution.res"
+            if [ "$(head -1 "$solution.res")" != "100" ]; then
+                if [ -z "$short_output" ]; then
+                    test_res="${C_WA} WA ${C_RST}"
+                    test_res_details="$(tail -1 "$solution.res")"
+                else 
+                    test_res="${C_WA}W${C_RST}"
                 fi
-                if [ -n "$check_stderr" ] && [ "`head -1 "$solution.errres"`" != "100" ]; then
-                    if [ -z "$short_output" ]; then
-                        echo -e " \033[30m\033[41m WA \033[0m"
-                        echo -n "      [stderr] "
-                        tail -1 "$solution.errres"
-                    else echo -en "\033[30m\033[41mW\033[0m"; fi
-                    cnt_wan=$[cnt_wan+1]
-                    if [ $stop_on_error -eq 1 ]; then break; fi
-                else
-                    ##############################  AC
-                    if [ -z "$short_output" ]; then
-                        echo -e " \033[30m\033[42m AC \033[0m"
-                    else echo -en "\033[30m\033[42mA\033[0m"; fi
-                    cnt_acc=$[cnt_acc+1]
-                fi ## AC
-            fi ## WA [stderr]
-        fi ## WA
-    fi ## RE
-    if [ -n "$short_output" ] && [ $[cur_test%line_width] -eq 0 ]; then echo ""; fi
+                cnt_wan=$[cnt_wan+1]
+            fi
+        else
+            test_res="${C_INT}????${C_RST}"
+            test_res_details="!! nie można sprawdzić: brak pliku ${C_EMP}$output_files$test_name.out${C_RST} !!"
+        fi
+    fi
+    ########################## WA na stderr
+    if [ -z "$test_res" ] && [ -n $check_stderr ]; then
+        if [ -e "$output_files$test_name.err" ]; then
+            "$compare" "$x" "$solution.errtmp" "$output_files$test_name.err" > "$solution.errres"
+            if [ "$(head -1 "$solution.errres")" != "100" ]; then
+                if [ -z "$short_output" ]; then
+                    test_res="${C_WA} WA ${C_RST}"
+                    test_res_details="[stderr] $(tail -1 "$solution.errres")"
+                else 
+                    test_res="${C_WA}W${C_RST}";
+                fi
+                cnt_wan=$[cnt_wan+1]
+            fi
+        else
+            test_res="${C_INT}????${C_RST}"
+            test_res_details="!! nie można sprawdzić: brak pliku ${C_EMP}$output_files$test_name.err${C_RST} !!"
+        fi
+    fi
+    ##############################  AC
+    if [ -z "$test_res" ]; then
+        if [ -z "$short_output" ]; then
+            test_res="${C_AC} AC ${C_RST}"
+        else
+            test_res="${C_AC}A${C_RST}"
+        fi
+        cnt_acc=$[cnt_acc+1]
+    fi
+    ############################### wypisanie wyniku
+    if [ -z "$mem_res" ]; then mem_res="${C_MEM}${C_RST}"; fi
+    if [ -z "$time_res" ]; then mem_res="${C_TIM}${C_RST}"; fi
+    if [ -z "$short_output" ]; then
+        printf "% ${FWD_MEM}s  % ${FWD_TIM}s  % ${FWD_RES}s\n" "$mem_res" "$time_res" "$test_res"
+        if [ -n "$test_res_details" ]; then echo "      $test_res_details"; fi
+    else
+        echo -n "$test_res"
+        if [ $[cur_test%line_width] -eq 0 ]; then echo; fi
+    fi
     if [ -z "$dont_remove_tmpfiles" ] || [ $cur_test -lt $tests_cnt ]; then
         rm -f "$solution.tmp" "$solution.tim" "$solution.res";
     fi
+    if [ $stop_on_error -eq 1 ] && [ $cnt_acc -ne $cur_test ]; then break; fi
 done
 
 ######################  podsumowanie
@@ -318,33 +347,27 @@ echo ""
 if [ -n "$short_output" ]; then echo ""; fi
 if [ $stop_on_error -eq 1 ] && [ $cnt_acc -lt $tests_cnt ]; then echo "Napotkano błąd, przerwanie testowania";
 else
-    echo -en "Wyniki testowania:  "
-    if [ $cnt_acc -gt 0 ]; then echo -e "`printf "% 11d" $cnt_acc` x \033[30m\033[42m AC \033[0m"; else echo; fi
-    if [ $cnt_cle -gt 0 ]; then echo -e "`printf "% 31d" $cnt_cle` x \033[31m\033[43m TL \033[0m"; fi
-    if [ $cnt_mle -gt 0 ]; then echo -e "`printf "% 31d" $cnt_mle` x \033[31m\033[46m ML \033[0m"; fi
-    if [ $cnt_wan -gt 0 ]; then echo -e "`printf "% 31d" $cnt_wan` x \033[30m\033[41m WA \033[0m"; fi
-    if [ $cnt_rte -gt 0 ]; then echo -e "`printf "% 31d" $cnt_rte` x \033[31m\033[47m RE \033[0m"; fi
-    if [ -n "$time_limit" ]; then
-        if [ $max_time_sec -gt $time_limit ] || ( [ $max_time_sec -eq $time_limit ] && [ $max_time_frc -gt 0 ] ); then
-            max_time_sec="\033[31m\033[43m$max_time_sec"; 
-            max_time_sec="`printf "% 23s" "$max_time_sec"`"
-        else 
-            max_time_sec="`printf "\033[0;33m% 7d" $max_time_sec`"
-        fi
-    else max_time_sec="`printf "\033[0;33m% 7d" $max_time_sec`"; fi
-    echo -e "Maksymalny czas działania:  $max_time_sec.$max_time_frc\033[0m"
-    if [ $max_mem -gt 0 ]; then
-        if [ -n "$mem_limit" ]; then 
-            if [ $max_mem -gt $mem_limit ]; then 
-                max_mem="\033[31m\033[046m$max_mem";
-                max_mem="`printf "% 28s" "$max_mem"`"
-            else
-                max_mem="`printf "\033[0;36m% 9d" $max_mem`"
-            fi
+    echo -n "Wyniki testowania:  "
+    if [ $cnt_acc -gt 0 ]; then echo "$(printf "% 11d" $cnt_acc) x ${C_AC} AC ${C_RST}"; else echo; fi
+    if [ $cnt_tle -gt 0 ]; then echo "$(printf "% 31d" $cnt_tle) x ${C_TL} TL ${C_RST}"; fi
+    if [ $cnt_mle -gt 0 ]; then echo "$(printf "% 31d" $cnt_mle) x ${C_ML} ML ${C_RST}"; fi
+    if [ $cnt_wan -gt 0 ]; then echo "$(printf "% 31d" $cnt_wan) x ${C_WA} WA ${C_RST}"; fi
+    if [ $cnt_rte -gt 0 ]; then echo "$(printf "% 31d" $cnt_rte) x ${C_RE} RE ${C_RST}"; fi
+    if [ $cnt_tle -gt 0 ]; then 
+        max_time_res="${C_TL}>${time_limit}s${C_RST}"
+    else
+        max_time_res="${C_TIM}$[max_time/100].$[max_time%100]s${C_RST}"
+    fi
+    printf "Maksymalny czas działania: % 24s\n" "$max_time_res"
+    if [ $max_mem -gt 0 ] || [ $cnt_mle -gt 0 ]; then
+        if [ $cnt_mle -gt 0 ]; then
+            max_mem_res="${C_ML}>${mem_limit}k${C_RST}"
         else
-            max_mem="`printf "\033[0;36m% 9d" $max_mem`"
+            max_mem_res="${C_MEM}${max_mem}k${C_RST}"
+            max_mem_res1="${C_ML}${max_mem}k${C_RST}"
+            echo "len=${#max_mem_res} len1=${#max_mem_res1}"
         fi
-        echo -e "Maksymalne zużycie pamięci: ${max_mem}K\033[0m"
+        printf "Maksymalne zużycie pamięci: % 23s\n" "$max_mem_res"
     fi
 fi
 
@@ -352,3 +375,4 @@ fi
 if [ -z "$dont_remove_tmpfiles" ]; then
     rm -f "$solution.res" "$solution.errres" "$solution.e" "$solution.compare" "$solution.tim" "$solution.tmp" "$solution.errtmp"
 fi
+

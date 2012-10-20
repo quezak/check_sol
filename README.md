@@ -1,4 +1,4 @@
 CheckSol
 ========
 
-A small toolkit for generating &amp; checking program input/output.
+* w czasie sprawdzeń nie powinien być uruchomiony inny program o nazwie identycznej ze sprawdzanym
