@@ -5,30 +5,8 @@ VERSION=1.85
 DATE=20-10-2012
 
 ################ konfiguracja
-DEFAULT_CHECKER='/usr/bin/myscripts/standard_compare'
-C="gcc"
-CFLAGS="-O2 -Wall -Wunused -Wformat -Wfloat-equal -Wsequence-point"
-CXX="g++"
-CXXFLAGS="$CFLAGS -Weffc++ -std=c++0x"
-PPC="ppc386"
-PASFLAGS="-O2 -XS -Xt"
-# kolorki
-C_RST="$(echo -en "\033[m")"
-C_DRK="$(echo -en "${C_RST}\033[1;30m")"
-C_EMP="$(echo -en "${C_RST}\033[1;37m")"
-C_MEM="$(echo -en "${C_RST}\033[0;36m")"
-C_TIM="$(echo -en "${C_RST}\033[0;33m")"
-C_AC="$(echo -en "\033[30m\033[42m")"
-C_TL="$(echo -en "\033[31m\033[43m")"
-C_ML="$(echo -en "\033[31m\033[46m")"
-C_WA="$(echo -en "\033[30m\033[41m")"
-C_RE="$(echo -en "\033[31m\033[47m")"
-C_INT="$(echo -en "\033[31m\033[40m")"
-# szerokosc pol
-FWD_COL=13
-FWD_MEM=$[10+FWD_COL]
-FWD_TIM=$[8+FWD_COL]
-FWD_RES=$[5+FWD_COL]
+CHECK_SOL_DIR="/home/akozak/src/check_sol/check_sol"
+source "$CHECK_SOL_DIR/check_sol.cfg"
 
 function usage {
 cat << EOF
@@ -172,7 +150,7 @@ cnt_rte=0
 if [ -z "$short_output" ]; then
     echo -n "${C_DRK}TEST${C_RST}"
     printf "% $[max_test_name_l+${#tests_cnt}*2]s" "NAZWA"
-    printf "  % ${FWD_MEM}s  % ${FWD_TIM}s  %  ${FWD_RES}s\n" "${C_MEM}PAMIEC${C_RST}"\
+    printf "  % $[FWD_MEM+2]s  % ${FWD_TIM}s  %  ${FWD_RES}s\n" "${C_MEM}PAMIĘĆ${C_RST}"\
         "${C_TIM}CZAS${C_RST}" "${C_EMP}WYNIK${C_RST}"
 else
     printf "${C_DRK}% $[${#tests_cnt}*2-1]sTEST${C_RST} WYNIKI\n" ""
@@ -353,6 +331,7 @@ else
     if [ $cnt_mle -gt 0 ]; then echo "$(printf "% 31d" $cnt_mle) x ${C_ML} ML ${C_RST}"; fi
     if [ $cnt_wan -gt 0 ]; then echo "$(printf "% 31d" $cnt_wan) x ${C_WA} WA ${C_RST}"; fi
     if [ $cnt_rte -gt 0 ]; then echo "$(printf "% 31d" $cnt_rte) x ${C_RE} RE ${C_RST}"; fi
+    echo
     if [ $cnt_tle -gt 0 ]; then 
         max_time_res="${C_TL}>${time_limit}s${C_RST}"
     else
