@@ -21,7 +21,7 @@ Parametry opcjonalne:
 -e, --no-errors     sprawdzanie do pierwszego bledu
 -m, --mem-limit     limit pamięci (kiB, z dopiskiem M MiB)
 -t, --time-limit    limit czasowy (s)
--u, --summary       bez szczegółów dla pojedynczych testów
+-h, --short-output  bez szczegółów dla pojedynczych testów
 -N, --no-delete     bez usuwania plików tymczasowych
 -E, --check-stderr  porownaj tez wyjscie bledu (pliki .err obok .out)
 
@@ -55,7 +55,7 @@ while [ $# -gt 0 ]; do
             shift;;
         -e|--no-errors ) 
             stop_on_error=1;;
-        -u|--summary ) 
+        -h|--short-output ) 
             short_output=1;;
         -N|--no-delete ) 
             dont_remove_tmpfiles=1;;
@@ -101,6 +101,9 @@ if [ -z "$compiled_solution" ]; then
         pas)
             solution="$(basename "$solution" .pas)"
             $PPC $PASFLAGS "$src_file" -o"./$solution.e";;
+        *)
+            echo "Nie rozpoznano rozszerzenia pliku. Skompiluj kod ręcznie i użyj opcji -S."
+            exit 3;;
     esac
     if [ $? -gt 0 ]; then echo "kompilacja rozwiąznia się nie powiodła!"; exit 2; fi
     rm -f "$solution.o"
@@ -120,7 +123,7 @@ elif [ -n "$compare" ]; then
     src_file="$compare"
     compare="$(basename "$compare" .cpp)"
     echo "kompilacja sprawdzaczki"
-    g++ -O2 "$src_file" -o "$solution.compare"
+    $CXX $CXXFLAGS "$src_file" -o "$solution.compare"
     if [ $? -gt 0 ]; then echo "kompilacja sprawdzaczki się nie powiodła!"; exit 2; fi
     compare="./$solution.compare"
 else
@@ -157,7 +160,6 @@ else
     line_width=$(tput cols)
     if [ $line_width -lt $[${#tests_cnt}*2+104] ]; then line_width=50; else line_width=100; fi
 fi
-old_lim_s=$(ulimit -Ss)
 old_lim_v=$(ulimit -Sv)
 old_lim_t=$(ulimit -St)
 rm -f "$solution.res" "$solution.tim" "$solution.tmp"
@@ -171,17 +173,16 @@ for x in $input_files; do
     cur_test=$[cur_test+1]
     test_name="$(basename "$x" .in)"
     if [ -z "$short_output" ] || [ $[cur_test%line_width] -eq 1 ]; then
-        printf "${C_DRK}[% ${#tests_cnt}s/$tests_cnt]${C_RST}" "$cur_test"
+        printf "${C_DRK}[% ${#tests_cnt}s/$tests_cnt]${C_RST} " "$cur_test"
     fi
-    if [ -z "$short_output" ]; then printf " % ${max_test_name_l}s: " "$test_name"; fi
+    if [ -z "$short_output" ]; then printf "% ${max_test_name_l}s: " "$test_name"; fi
     if [ -n "$mem_limit" ]; then 
-        ulimit -Ss $mem_limit
         ulimit -Sv $mem_limit
     fi
     if [ -n "$time_limit" ]; then 
         ulimit -St $time_limit
     fi
-    /usr/bin/time -f '%e' -o "$solution.tim" "$solution_exe" < "$x" > "$solution.tmp" 2>"$stderr_outf" &
+    "$TIMEPRG" -f '%e' -o "$solution.tim" "$solution_exe" < "$x" > "$solution.tmp" 2>"$stderr_outf" &
     pid=$(ps -C "$(basename $solution_exe)" -o pid h | tr -dc 0-9)
     time_excd=0
     mem_usage=""
@@ -199,7 +200,6 @@ for x in $input_files; do
             sleep 0.05
         done
     fi
-    ulimit -Ss $old_lim_s
     ulimit -Sv $old_lim_v
     ulimit -St $old_lim_t
     while [ ! -s "$solution.tim" ]; do sleep 0.1; done
@@ -273,8 +273,12 @@ for x in $input_files; do
                 cnt_wan=$[cnt_wan+1]
             fi
         else
-            test_res="${C_INT}????${C_RST}"
-            test_res_details="!! nie można sprawdzić: brak pliku ${C_EMP}$output_files$test_name.out${C_RST} !!"
+            if [ -z "$short_output" ]; then
+                test_res="${C_INT}????${C_RST}"
+                test_res_details="!! nie można sprawdzić: brak pliku ${C_EMP}$output_files$test_name.out${C_RST} !!"
+            else
+                test_res="${C_INT}?${C_RST}"
+            fi
         fi
     fi
     ########################## WA na stderr
@@ -291,8 +295,12 @@ for x in $input_files; do
                 cnt_wan=$[cnt_wan+1]
             fi
         else
-            test_res="${C_INT}????${C_RST}"
-            test_res_details="!! nie można sprawdzić: brak pliku ${C_EMP}$output_files$test_name.err${C_RST} !!"
+            if [ -z "$short_output" ]; then
+                test_res="${C_INT}????${C_RST}"
+                test_res_details="!! nie można sprawdzić: brak pliku ${C_EMP}$output_files$test_name.err${C_RST} !!"
+            else
+                test_res="${C_INT}?${C_RST}"
+            fi
         fi
     fi
     ##############################  AC
@@ -317,13 +325,18 @@ for x in $input_files; do
     if [ -z "$dont_remove_tmpfiles" ] || [ $cur_test -lt $tests_cnt ]; then
         rm -f "$solution.tmp" "$solution.tim" "$solution.res";
     fi
-    if [ $stop_on_error -eq 1 ] && [ $cnt_acc -ne $cur_test ]; then break; fi
+    if [ $stop_on_error -eq 1 ] && [ $cnt_acc -ne $cur_test ]; then 
+        last_test="$x";
+        break;
+    fi
 done
 
 ######################  podsumowanie
-echo ""
-if [ -n "$short_output" ]; then echo ""; fi
-if [ $stop_on_error -eq 1 ] && [ $cnt_acc -lt $tests_cnt ]; then echo "Napotkano błąd, przerwanie testowania";
+echo
+if [ -n "$short_output" ]; then echo; fi
+if [ $stop_on_error -eq 1 ] && [ $cnt_acc -lt $tests_cnt ]; then 
+    echo "Napotkano błąd dla testu ${C_EMP}$last_test${C_RST}"
+    echo "Przerwanie testowania"
 else
     echo -n "Wyniki testowania:  "
     if [ $cnt_acc -gt 0 ]; then echo "$(printf "% 11d" $cnt_acc) x ${C_AC} AC ${C_RST}"; else echo; fi
