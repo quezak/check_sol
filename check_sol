@@ -11,10 +11,10 @@ source "$CHECK_SOL_DIR/check_sol.cfg"
 function usage {
 cat << EOF
 Parametry obowiązkowe:
--s, --solution    rozwiązanie do sprawdzenia LUB
--S, --sol-exec    skompilowane rozwiązanie
--i, --input       plik[i] .in / katalog z plikami .in
--o, --output      plik[i] .out / katalog z plikami .out
+-s, --solution      rozwiązanie do sprawdzenia LUB
+-S, --sol-exec      skompilowane rozwiązanie
+-i, --input         plik[i] .in / katalog z plikami .in
+-o, --output        katalog z plikami .out
 Parametry opcjonalne:
 -c, --compare       niestandardowa sprawdzaczka
 -C, --comp-exec     skompilowana sprawdzaczka
@@ -24,6 +24,9 @@ Parametry opcjonalne:
 -h, --short-output  bez szczegółów dla pojedynczych testów
 -N, --no-delete     bez usuwania plików tymczasowych
 -E, --check-stderr  porownaj tez wyjscie bledu (pliki .err obok .out)
+
+Szczegółowy opis działania i parametrów znajduje się w
+    $CHECK_SOL_DIR/README.md
 
 check_sol v${VERSION} (${DATE}), cc-by/beerware quezak@gmail.com
 EOF

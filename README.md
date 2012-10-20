@@ -42,8 +42,8 @@ maksymalny czas oraz pamięć dla testu.
 
 Parametry uruchomienia
 ----------------------
-* `-s | --solution PLIK` kod programu do sprawdzenia. Obsługiwane są pliki .cpp, .cc, .c, .pas, inne
-  należy skompilować ręcznie i użyć opcji `-S`.
+* `-s | --solution PLIK` kod programu do sprawdzenia. Obsługiwane są pliki `.cpp`, `.cc`, `.c`, `.pas`,
+  inne należy skompilować ręcznie i użyć opcji `-S`.
   Podanie tego parametru lub `-S` jest konieczne.
 * `-S | --sol-exec PLIK` skompilowany program do sprawdzenia. Powinien mieć prawa do uruchomienia.
   Podanie tego parametru lub `-s` jest konieczne.
@@ -58,9 +58,9 @@ Parametry uruchomienia
   program sprawdzający, przeczytaj komentarz na początku `standard_compare.cpp`.
 * `-C | --comp-exec PLIK` skompilowany program sprawdzający zgodność wyjść.
 * `-e | --no-errors` powoduje zatrzymanie sprawdzania po pierwszym błędnym teście.
-* `-m | --mem-limit LICZBA` ustawia limit pamięci dla programu na LICZBA kilobajtów (lub LICZBA
-  megabajtów, jeśli LICZBA ma dopisek `M`).
-* `-t | --time-limit LICZBA` ustawia limit czasu wykonania jednego testu na LICZBA sekund.
+* `-m | --mem-limit LICZBA` ustawia limit pamięci dla programu na `LICZBA` kilobajtów (lub `LICZBA`
+  megabajtów, jeśli `LICZBA` ma dopisek `M`).
+* `-t | --time-limit LICZBA` ustawia limit czasu wykonania jednego testu na `LICZBA` sekund.
 * `-h | --short-output` zamiast jednego wiersza wyniku dla każdego testu wypisuje pojedynczy znak
   statusu sprawdzenia -- przydatne przy testowaniu na dużej liczbie przykładów.
 * `-N | --no-delete` nie usuwa plików tymczasowych tworzonych przez program. Przydatne w połączeniu
@@ -68,22 +68,23 @@ Parametry uruchomienia
 * `-E | --check-stderr` porównuje również standardowe wyjście błędu programów. Zakłada, że wzorcowe
   wyjścia błędu mają rozszerzenie `.err` i znajdują się w katalogu z plikami `.out`.
 
-Przykład wywołania:
+#### Przykład wywołania
 `check_sol -s zadanie.cc -i tests/in -o tests/out -E -t 1 -m 50M -e`: skompilowanie pliku 
 `zadanie.cc` i uruchomienie go na wszystkich plikach wejściowych z katalogu `tests/in`, sprawdzając
 zgodność z wyjściami `.out` i `.err` w katalogu `tests/out`, z limitem 1 sekundy i 50MiB pamięci
-i przerwaniem po pierwszym błędzie.
+oraz przerwaniem testowania po pierwszym błędzie.
 
 Znane błędy
 -----------
 * W czasie sprawdzeń nie powinien być uruchomiony inny program o nazwie identycznej ze sprawdzanym.
 * Program (z zamierzenia) nie jest całkowicie idiotoodporny -- argumenty wykonania powinny być użyte
   zgodnie z przeznaczeniem.
+
 Znalezione błędy można zgłaszać przez GitHub: `https://github.com/quezak/check_sol/issues`
 
 Changelog
 ---------
-* v1.85: *liczne* poprawki związane z czytelnością i stylem kodu.
+* v1.85: **liczne** poprawki związane z czytelnością i stylem kodu.
 * v1.7.1: dodane sprawdzenie wyjścia błędów.
 * v1.7: wersja z momentu założenia repozytorium. Liczyła kilka ładnych lat i nie była napisana
   zbyt ładnie.
