@@ -87,7 +87,7 @@ Znalezione błędy można zgłaszać przez GitHub: `https://github.com/quezak/ch
 
 Changelog
 ---------
-* v1.85: **liczne** poprawki związane z czytelnością i stylem kodu.
+* v1.8-1.89: **liczne** poprawki związane z czytelnością i stylem kodu.
 * v1.7.1: dodane sprawdzenie wyjścia błędów.
 * v1.7: wersja z momentu założenia repozytorium. Liczyła kilka ładnych lat i nie była napisana
   zbyt ładnie.

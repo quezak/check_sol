@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ############### dane o wersji
-VERSION=1.85
+VERSION=1.89
 DATE=20-10-2012
 
 ################ konfiguracja
