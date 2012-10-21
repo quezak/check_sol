@@ -32,7 +32,8 @@ W trybie normalnym, dla każdego testu wypisywany jest jeden wiersz wyniku:
     * ` WA ` -- _Wrong Answer_, odpowiedź niezgodna z wzorcową,
     * ` RE ` -- _Runtime Error_, błąd wykonania
     * `????` -- inny błąd (np. brak plików)
-    w trzech ostatnich przypadkach w kolejnym wierszu zostanie wypisany opis błędu.
+    
+    W trzech ostatnich przypadkach w kolejnym wierszu zostanie wypisany opis błędu.
 
 W trybie skróconego wyjścia (patrz `--short-output`) dla każdego testu wypisywany jest tylko jeden
 znak wyniku testu, analogicznie jak wyżej.
