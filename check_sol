@@ -317,7 +317,7 @@ function test_check_stdout()
 ########################## WA na stderr
 function test_check_stderr()
 {
-    if [ -z "$test_res" ] && [ -n $check_stderr ]; then
+    if [ -z "$test_res" ] && [ -n "$check_stderr" ]; then
         if [ -e "$output_files$test_name.err" ]; then
             "$compare" "$x" "$solution.errtmp" "$output_files$test_name.err" > "$solution.errres"
             if [ "$(head -1 "$solution.errres")" != "100" ]; then
