@@ -407,7 +407,6 @@ function print_summary()
             else
                 max_mem_res="${C_MEM}${max_mem}k${C_RST}"
                 max_mem_res1="${C_ML}${max_mem}k${C_RST}"
-                echo "len=${#max_mem_res} len1=${#max_mem_res1}"
             fi
             printf "Maksymalne zużycie pamięci: % 23s\n" "$max_mem_res"
         fi
