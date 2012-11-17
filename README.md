@@ -77,12 +77,12 @@ Parametry uruchomienia
   programu do jego wygenerowania. Przy `-E` generuje w tymże katalogu również pliki `.err`.
   Uwaga: generowane pliki nadpisują dotychczasowe pliki o tej samej nazwie.
 * `-G | --gen-tests PLIK` uznaje plik rozwiązania za generator testów, przyjmujący parametry
-  określone w PLIKu konfiguracyjnym. Zobacz sekcję _Generowanie testów_, opisującą format takich
+  określone w PLIKu konfiguracyjnym. Zobacz sekcję _Generowanie testów_, opisującą format tych
   plików. Opcja generowania wyłącza `-g`, zaś opcje sprawdzenia nie mają znaczenia. Pozostają
   aktywne limity czasu i pamięci. Uwaga: generowane pliki nadpisują dotychczasowe.
 
-#### Przykłady wywołaniaa
-`check_sol -s zadanie.cpp -i testy -o testy`: najprostsze sprawdzenie kodu zadanie.cpp 
+#### Przykłady wywołania
+`check_sol -s zadanie.cpp -i testy -o testy`: najprostsze sprawdzenie kodu `zadanie.cpp`
 na wszystkich plikach `.in` z katalogu testy.
 
 `check_sol -s zadanie.cc -i tests/in -o tests/out -E -t 1 -m 50M -e`: skompilowanie pliku 
@@ -104,29 +104,36 @@ powinny zostać zapisane w skrypcie konfiguracyjnym. Skrypt powinien ustawiać n
   `$TEST_COUNT` elementów
 * zamiast `PARAMS` oraz osobnych tablic można zdefiniować tablicę `GEN_TESTS_PARAMS`, zawierającą
   przynajmniej `$TEST_COUNT` elementów -- wierszy gotowych do przekazania generatorowi.
-W szczególności zaleca się, żeby jako jeden z parametrów podać ziarno generatora liczb losowych.
+
+Zaleca się, żeby jako jeden z parametrów podać ziarno generatora liczb losowych.
 Można wtedy, zamiast wysyłać duże pliki wejściowe, wysłać sam generator i plik konfiguracyjny,
 uzyskując na dowolnej maszynie taki sam zestaw testów. Ponadto, skrypt _może_ zawierać inne komendy,
 zostaną one wykonane przed rozpoczęciem generowania (nawet wymienione zmienne mogą być generowane,
 a nie podane wprost). Parametry powinny mieć unikalne nazwy.
 
 Przykładowy prosty generator, wypisujący `n` losowych liczb z zakresu `[0..n)`:
-    sscanf(argv[1], "%d", &seed);
-    sscanf(argv[2], "%d", &n);
-    srand(seed);
-    for (int i=0; i<n; ++i) printf("%d ", rand()%n);
+```C++
+sscanf(argv[1], "%d", &seed);
+sscanf(argv[2], "%d", &n);
+srand(seed);
+for (int i=0; i<n; ++i) printf("%d ", rand()%n);
+```
 
 Przykładowy plik konfiguracyjny powyższego generatora:
-    TEST_NAME=nazwa
-    TEST_COUNT=5
-    PARAMS="P_SEED P_ILE"
-    P_SEED=(123 950 1209 5392 2)
-    P_ILE=(4 10 50 123 500000)
+```sh
+TEST_NAME=nazwa
+TEST_COUNT=5
+PARAMS="P_SEED P_ILE"
+P_SEED=(123 950 1209 5392 2)
+P_ILE=(4 10 50 123 500000)
+```
 
 Konfiguracja tych samych testów, przy użyciu drugiego sposobu definiowania zmiennych:
-    TEST_NAME=nazwa
-    TEST_COUNT=5
-    GEN_TESTS_PARAMS=("123 4" "950 10" "1209 50" "5392 123" "2 500000")
+```sh
+TEST_NAME=nazwa
+TEST_COUNT=5
+GEN_TESTS_PARAMS=("123 4" "950 10" "1209 50" "5392 123" "2 500000")
+```
 
 
 Znane błędy
