@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ############### dane o wersji
-VERSION=1.9
+VERSION=2.0
 DATE=17-11-2012
 
 ################ konfiguracja
@@ -13,20 +13,21 @@ function usage()
 {
 cat << EOF
 Parametry obowiązkowe:
--s, --solution      rozwiązanie do sprawdzenia LUB
--S, --sol-exec      skompilowane rozwiązanie
--i, --input         plik[i] .in / katalog z plikami .in
--o, --output        katalog z plikami .out
+-s, --solution PLIK   rozwiązanie do sprawdzenia LUB
+-S, --sol-exec PLIK   skompilowane rozwiązanie
+-i, --input ARG[s]    plik[i] .in / katalog z plikami .in
+-o, --output DIR      katalog z plikami .out
 Parametry opcjonalne:
--c, --compare       niestandardowa sprawdzaczka
--C, --comp-exec     skompilowana sprawdzaczka
--e, --no-errors     sprawdzanie do pierwszego bledu
--m, --mem-limit     limit pamięci (kiB, z dopiskiem M MiB)
--t, --time-limit    limit czasowy (s)
--h, --short-output  bez szczegółów dla pojedynczych testów
--N, --no-delete     bez usuwania plików tymczasowych
--E, --check-stderr  porownaj tez wyjscie bledu (pliki .err obok .out)
--G, --gen-outs      zamiast sprawdzac, wygeneruj pliki wyjsciowe
+-c, --compare PLIK    niestandardowa sprawdzaczka
+-C, --comp-exec PLIK  skompilowana sprawdzaczka
+-e, --no-errors       sprawdzanie do pierwszego bledu
+-m, --mem-limit NUM   limit pamięci (kiB, z dopiskiem M -- MiB)
+-t, --time-limit NUM  limit czasowy (s)
+-h, --short-output    bez szczegółów dla pojedynczych testów
+-N, --no-delete       bez usuwania plików tymczasowych
+-E, --check-stderr    porownaj tez wyjscie bledu (pliki .err obok .out)
+-g, --gen-outs        zamiast sprawdzać, wygeneruj pliki wyjściowe
+-G, --gen-tests PLIK  generowanie testów wg zadanego konfiga (patrz readme)
 
 Szczegółowy opis działania i parametrów znajduje się w
     $CHECK_SOL_DIR/README.md
@@ -70,8 +71,11 @@ function parse_args()
                 dont_remove_tmpfiles=1;;
             -E|--check-stderr) 
                 check_stderr=1;;
-            -G|--gen-outs)
+            -g|--gen-outs)
                 gen_outs=1;;
+            -G|--gen-tests)
+                gen_tests=1
+                gen_tests_cfg=$2; shift;;
             * ) 
                 echo "niepoprawna opcja: $1"; usage; exit 1;;
         esac
@@ -85,14 +89,27 @@ function parse_args()
     if [ -z "$input_files" ]; then 
         echo "nie podano plików wejściowych"; usage; exit 1; 
     fi
-    if [ ! -d "$output_files" ]; then 
-        echo "nie podano katalogu z wyjściami"; usage; exit 1; 
-    fi
-    if [ -d "$input_files" ]; then 
-        input_files="${input_files%/}/*.in"; 
-    fi
-    if [ "$output_files" == "${output_files%/}" ]; then 
-        output_files="$output_files/"; 
+    if [ -z "$gen_tests" ]; then
+        if [ ! -d "$output_files" ]; then 
+            echo "nie podano katalogu z wyjściami"; usage; exit 1; 
+        fi
+        if [ -d "$input_files" ]; then 
+            input_files="${input_files%/}/*.in"; 
+        fi
+        if [ "$output_files" == "${output_files%/}" ]; then 
+            output_files="$output_files/"; 
+        fi
+    else
+        unset gen_outs
+        if [ ! -d "$input_files" ]; then
+            echo "nie podano katalogu (argument -i)"; usage; exit 1;
+        fi
+        if [ "$input_files" == "${input_files%/}" ]; then 
+            input_files="$input_files/"; 
+        fi
+        if [ ! -e "$gen_tests_cfg" ]; then
+            echo "podany skrypt konfiguracyjny nie istnieje"; usage; exit 1;
+        fi
     fi
 }
 
@@ -186,6 +203,61 @@ function precache_resources()
     stderr_outf='/dev/null'
     if [ -n "$check_stderr" ]; then
         stderr_outf="$solution.errtmp"
+    fi
+}
+
+########################## wczytanie konfiguracji generowania testów
+function prepare_gen_tests()
+{
+    if [ -n "$gen_tests" ]; then
+        echo "wczytywanie konfiguracji generowania testów"
+        # sprawdzenie konfiga
+        local gen_err=0
+        source $gen_tests_cfg
+        if [ -z "$TEST_NAME" ]; then
+            echo "nie podano nazwy testów"; gen_err=1
+        fi
+        if [ -z "$TEST_COUNT" ]; then
+            echo "nie podano liczby testów"; exit 2
+        fi
+        local tmp;
+        if [ -n "$GEN_TESTS_PARAMS" ]; then
+            if [ ${#GEN_TESTS_PARAMS[@]} -lt $TEST_COUNT ]; then
+                echo "tablica GEN_TESTS_PARAMS ma niewystarczającą liczbę elementów"; gen_err=1
+            fi
+        else
+            if [ -z "$PARAMS" ]; then
+                echo "nie podano parametrów"; gen_err=1
+            fi
+            for param in $PARAMS; do
+                tmp="$param[@]"
+                tmp=(${!tmp})
+                if [ ${#tmp[@]} -lt $TEST_COUNT ]; then
+                    echo "parametr $param ma niewystarczającą liczbę wartości"; gen_err=1
+                fi
+            done
+        fi
+        if [ $gen_err -eq 1 ]; then
+            echo "błędy w konfiguracji generatora!"
+            exit 1
+        fi
+        # 
+        local in_dir="$input_files"
+        input_files=""
+        for x in `seq -w 1 $TEST_COUNT`; do
+            input_files+=" $in_dir$TEST_NAME$x.in"
+        done
+        if [ -z "$GEN_TESTS_PARAMS" ]; then
+            local line;
+            for x in `seq 0 $[TEST_COUNT-1]`; do
+                line=""
+                for param in $PARAMS; do
+                    tmp=$param[$x]
+                    line+="${!tmp} "
+                done
+                GEN_TESTS_PARAMS[$x]="$line"
+            done
+        fi
     fi
 }
 
@@ -291,14 +363,33 @@ function test_check_runtime_error()
     fi
 }
 
-################################ skopiowanie outow, jesli tylko generujemy
-function test_gen_outs() {
+################################ generowanie inow
+function test_gen_tests()
+{
+    # $1 = docelowa nazwa testu
+    if [ -n "$gen_tests" ]; then
+        mv "$solution.tmp" "$x"
+        if [ -z "$short_output" ]; then
+            test_res="${C_GEN}IGEN${C_RST}"
+        else
+            test_res="${C_GEN}I${C_RST}"
+        fi
+    fi
+}
+
+################################ skopiowanie outow, jesli je generujemy
+function test_gen_outs() 
+{
     if [ -n "$gen_outs" ]; then
         mv "$solution.tmp" "$output_files$test_name.out"
         if [ -n "$check_stderr" ]; then
             mv "$solution.errtmp" "$output_files$test_name.err"
         fi
-        test_res="${C_GEN}GEN ${C_RST}"
+        if [ -z "$short_output" ]; then
+            test_res="${C_GEN}OGEN${C_RST}"
+        else
+            test_res="${C_GEN}O${C_RST}"
+        fi
     fi
 }
 
@@ -384,12 +475,12 @@ function print_test_result()
 ######################## operacje po każdym teście
 function post_test_actions()
 {
-    if [ -z "$dont_remove_tmpfiles" ] || [ $cur_test -lt $tests_cnt ]; then
-        rm -f "$solution.tmp" "$solution.tim" "$solution.res";
-    fi
     if [ $stop_on_error -eq 1 ] && [ $cnt_acc -ne $cur_test ]; then 
         last_test="$x";
         break;
+    fi
+    if [ -z "$dont_remove_tmpfiles" ] || [ $cur_test -lt $tests_cnt ]; then
+        rm -f "$solution.tmp" "$solution.tim" "$solution.res";
     fi
 }
 
@@ -442,19 +533,25 @@ function clean_tmp_files()
 parse_args $@
 prepare_solution
 prepare_checker
+prepare_gen_tests
 precache_resources
 
 for x in $input_files; do
     pre_test_actions
 
-    "$TIMEPRG" -f '%e' -o "$solution.tim" "$solution_exe" < "$x" > "$solution.tmp" 2>"$stderr_outf" &
+    if [ -z "$gen_tests" ]; then
+        "$TIMEPRG" -f '%e' -o "$solution.tim" "$solution_exe" < "$x" > "$solution.tmp" 2>"$stderr_outf" &
+    else
+        "$TIMEPRG" -f '%e' -o "$solution.tim" "$solution_exe" ${GEN_TESTS_PARAMS[$cur_test-1]} > "$solution.tmp" 2>/dev/null &
+    fi
     pid=$(ps -C "$(basename $solution_exe)" -o pid h | tr -dc 0-9)
     wait_for_it
 
-    test_gen_outs
     test_check_mem
     test_check_time
     test_check_runtime_error
+    test_gen_tests $x
+    test_gen_outs
     test_check_stdout
     test_check_stderr
     test_check_ac
