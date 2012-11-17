@@ -93,7 +93,8 @@ oraz przerwaniem testowania po pierwszym błędzie.
 `check_sol -S generator -G gen_cfg -i testy`: wygenerowanie testów do katalogu `testy` programem 
 `generator` na podstawie konfiguracji w pliku `gen_cfg`.
 
-#### Generowanie testów
+Generowanie testów
+------------------
 Można zamiast pliku rozwiązania podać program generujący testy. Program taki powinien przyjmować
 odpowiednią liczbę parametrów z wiersza poleceń. Liczba generowanych testów, ich nazwa i parametry
 powinny zostać zapisane w skrypcie konfiguracyjnym. Skrypt powinien ustawiać następujące zmienne:
