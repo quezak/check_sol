@@ -1,8 +1,8 @@
 #!/bin/bash
 
 ############### dane o wersji
-VERSION=1.89
-DATE=20-10-2012
+VERSION=1.9
+DATE=17-11-2012
 
 ################ konfiguracja
 CHECK_SOL_DIR="/home/akozak/src/check_sol/check_sol"
@@ -26,6 +26,7 @@ Parametry opcjonalne:
 -h, --short-output  bez szczegółów dla pojedynczych testów
 -N, --no-delete     bez usuwania plików tymczasowych
 -E, --check-stderr  porownaj tez wyjscie bledu (pliki .err obok .out)
+-G, --gen-outs      zamiast sprawdzac, wygeneruj pliki wyjsciowe
 
 Szczegółowy opis działania i parametrów znajduje się w
     $CHECK_SOL_DIR/README.md
@@ -69,6 +70,8 @@ function parse_args()
                 dont_remove_tmpfiles=1;;
             -E|--check-stderr) 
                 check_stderr=1;;
+            -G|--gen-outs)
+                gen_outs=1;;
             * ) 
                 echo "niepoprawna opcja: $1"; usage; exit 1;;
         esac
@@ -82,8 +85,8 @@ function parse_args()
     if [ -z "$input_files" ]; then 
         echo "nie podano plików wejściowych"; usage; exit 1; 
     fi
-    if [ -z "$output_files" ]; then 
-        echo "nie podano plików wyjściowych"; usage; exit 1; 
+    if [ ! -d "$output_files" ]; then 
+        echo "nie podano katalogu z wyjściami"; usage; exit 1; 
     fi
     if [ -d "$input_files" ]; then 
         input_files="${input_files%/}/*.in"; 
@@ -288,6 +291,17 @@ function test_check_runtime_error()
     fi
 }
 
+################################ skopiowanie outow, jesli tylko generujemy
+function test_gen_outs() {
+    if [ -n "$gen_outs" ]; then
+        mv "$solution.tmp" "$output_files$test_name.out"
+        if [ -n "$check_stderr" ]; then
+            mv "$solution.errtmp" "$output_files$test_name.err"
+        fi
+        test_res="${C_GEN}GEN ${C_RST}"
+    fi
+}
+
 #################################  WA
 function test_check_stdout()
 {
@@ -437,6 +451,7 @@ for x in $input_files; do
     pid=$(ps -C "$(basename $solution_exe)" -o pid h | tr -dc 0-9)
     wait_for_it
 
+    test_gen_outs
     test_check_mem
     test_check_time
     test_check_runtime_error

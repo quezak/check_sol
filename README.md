@@ -71,6 +71,8 @@ Parametry uruchomienia
   z `--no-errors`, gdyż te pliki zawierają dane dot. wykonania ostatniego testu.
 * `-E | --check-stderr` porównuje również standardowe wyjście błędu programów. Zakłada, że wzorcowe
   wyjścia błędu mają rozszerzenie `.err` i znajdują się w katalogu z plikami `.out`.
+* `-G | --gen-outs` zamiast porównywać plikami `.out` w katalogu podanym w `-o`, używa zadanego 
+  programu do jego wygenerowania. Przy `-E` generuje w tymże katalogu również pliki `.err`.
 
 #### Przykład wywołania
 `check_sol -s zadanie.cc -i tests/in -o tests/out -E -t 1 -m 50M -e`: skompilowanie pliku 
@@ -88,6 +90,7 @@ Znalezione błędy można zgłaszać przez GitHub: `https://github.com/quezak/ch
 
 Changelog
 ---------
+* v1.9: opcja generowania plików wyjściowych
 * v1.8-1.89: **liczne** poprawki związane z czytelnością i stylem kodu.
 * v1.7.1: dodane sprawdzenie wyjścia błędów.
 * v1.7: wersja z momentu założenia repozytorium. Liczyła kilka ładnych lat i nie była napisana
