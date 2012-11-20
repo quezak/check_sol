@@ -155,6 +155,8 @@ Znalezione błędy można zgłaszać przez GitHub: `https://github.com/quezak/ch
 
 Changelog
 ---------
+* v2.05: możliwość podania wyszczególnionych plików wejściowych
+* v2.03: wczytywanie ze środowiska ustawień kompilacji
 * v2.0: generowanie testów, selftest przy instalacji
 * v1.9: opcja generowania plików wyjściowych
 * v1.8-1.89: **liczne** poprawki związane z czytelnością i stylem kodu.
