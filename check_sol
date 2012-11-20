@@ -5,7 +5,7 @@ VERSION=2.03
 DATE=20-11-2012
 
 ################ konfiguracja
-CHECK_SOL_DIR="/home/akozak/src/check_sol/check_sol"
+CHECK_SOL_DIR='/home/akozak/.check_sol'
 source "$CHECK_SOL_DIR/check_sol.cfg"
 
 ################ szybka pomoc
@@ -47,7 +47,11 @@ function parse_args()
             -S|--sol-exec ) 
                 compiled_solution=$2; shift;;
             -i|--input )
-                input_files=$2; shift;;
+                input_files=$2; shift
+                while [[ "$2" =~ .*\.in ]]; do
+                    input_files+=" $2"
+                    shift
+                done;;
             -o|--output )
                 output_files=$2; shift;;
             -c|--compare ) 
