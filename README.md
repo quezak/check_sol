@@ -20,6 +20,14 @@ Wymagania
 * uprawnienia do wykonania polecenia `ulimit`, jeśli używane są limity czasu lub pamięci,
 * odpowiednie kompilatory w przypadku podania pliku z kodem jako argumentu.
 
+Instalacja
+----------
+W celu instalacji należy uruchomić załączony skrypt `install.sh`. Zainstaluje on pliki w podanym
+katalogu (domyślnie `~/.check_sol`), uzupełni odpowiednio konfigurację oraz wykona testowe 
+uruchomienie skryptu. Żeby wygodniej korzystać ze skryptu check\_sol, można po pierwszej instalacji
+umieścić link do niego w katalogu na zmiennej `$PATH`, na przykład 
+`ln -s <katalog-instalacji>/check_sol /usr/local/bin/check_sol`
+
 Opis wyjścia skryptu
 --------------------
 W trybie normalnym, dla każdego testu wypisywany jest jeden wiersz wyniku:
@@ -120,7 +128,6 @@ sscanf(argv[2], "%d", &n);
 srand(seed);
 for (int i=0; i<n; ++i) printf("%d ", rand()%n);
 ```
-
 Przykładowy plik konfiguracyjny powyższego generatora:
 ```sh
 TEST_NAME=nazwa
