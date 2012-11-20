@@ -49,7 +49,7 @@ Parametry uruchomienia
 ----------------------
 * `-s | --solution PLIK` kod programu do sprawdzenia. Obsługiwane są pliki `.cpp`, `.cc`, `.c`, `.pas`,
   inne należy skompilować ręcznie i użyć opcji `-S`. Domyślne flagi kompilacji ustawione są w pliku
-  `check_sol`, ale honorowane są ustawienia zmiennych środowiskowych.
+  `check_sol.cfg`, ale honorowane są ustawienia zmiennych środowiskowych.
   Podanie tego parametru lub `-S` jest konieczne.
 * `-S | --sol-exec PLIK` skompilowany program do sprawdzenia. Powinien mieć prawa do uruchomienia.
   Podanie tego parametru lub `-s` jest konieczne.
