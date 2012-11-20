@@ -1,8 +1,8 @@
 #!/bin/bash
 
 ############### dane o wersji
-VERSION=2.0
-DATE=17-11-2012
+VERSION=2.03
+DATE=20-11-2012
 
 ################ konfiguracja
 CHECK_SOL_DIR="/home/akozak/src/check_sol/check_sol"
