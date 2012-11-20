@@ -17,7 +17,7 @@ fi
 mkdir -p "$path" || ( echo "nie można utworzyć katalogu" && exit 2 )
 
 ### kopie
-cp README.md standard_compare.cpp install.sh "$path" || \
+cp README.md default_compare.cpp install.sh "$path" || \
     ( echo "nie można zapisać do podanego katalogu" && exit 3 )
 
 ### time
@@ -29,12 +29,12 @@ fi
 timep=${timep//\//\\\/}
 
 ### sprawdzaczka
-$CXX $CXXFLAGS standard_compare.cpp -o "$path/standard_compare" || \
+$CXX $CXXFLAGS default_compare.cpp -o "$path/default_compare" || \
     ( echo "nie udało się skompilować sprawdzaczki" && exit 5 )
 
 ### konfig
 epath=${path//\//\\\/}
-sed -e "s/\(DEFAULT_CHECKER=\).*/\1'$epath\/standard_compare'/;s/\(TIMEPRG=\).*/\1'$timep'/" \
+sed -e "s/\(DEFAULT_CHECKER=\).*/\1'$epath\/default_compare'/;s/\(TIMEPRG=\).*/\1'$timep'/" \
     check_sol.cfg > "$path/check_sol.cfg"
 
 ### skrypt
