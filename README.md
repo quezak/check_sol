@@ -73,8 +73,9 @@ Parametry uruchomienia
 * `-C | --comp-exec PLIK` skompilowany program sprawdzający zgodność wyjść.
 * `-e | --no-errors` powoduje zatrzymanie sprawdzania po pierwszym błędnym teście.
 * `-m | --mem-limit LICZBA` ustawia limit pamięci dla programu na `LICZBA` kilobajtów (lub `LICZBA`
-  megabajtów, jeśli `LICZBA` ma dopisek `M`). Uwaga: przy zbyt niskich (kilkanaście MB i mniej) 
+  megabajtów, jeśli `LICZBA` ma dopisek `M`). Uwaga: przy zbyt niskich (kilkanaście MiB i mniej) 
   limitach zachowanie programów jest dość nieokreślone.
+* `-M | -Mem-limit LICZBA` alias do `-m <LICZBA>M` (limit pamięci w MiB).
 * `-t | --time-limit LICZBA` ustawia limit czasu wykonania jednego testu na `LICZBA` sekund.
 * `-h | --short-output` zamiast jednego wiersza wyniku dla każdego testu wypisuje pojedynczy znak
   statusu sprawdzenia -- przydatne przy testowaniu na dużej liczbie przykładów.

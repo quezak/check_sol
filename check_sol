@@ -1,8 +1,8 @@
 #!/bin/bash
 
 ############### dane o wersji
-VERSION=2.05
-DATE=20-11-2012
+VERSION=2.11
+DATE=22-11-2012
 
 ################ konfiguracja
 CHECK_SOL_DIR='/home/akozak/.check_sol'
@@ -22,6 +22,7 @@ Parametry opcjonalne:
 -C, --comp-exec PLIK  skompilowana sprawdzaczka
 -e, --no-errors       sprawdzanie do pierwszego bledu
 -m, --mem-limit NUM   limit pamięci (kiB, z dopiskiem M -- MiB)
+-M, --Mem-limit NUM   limit pamięci (MiB)
 -t, --time-limit NUM  limit czasowy (s)
 -h, --short-output    bez szczegółów dla pojedynczych testów
 -N, --no-delete       bez usuwania plików tymczasowych
@@ -32,7 +33,7 @@ Parametry opcjonalne:
 Szczegółowy opis działania i parametrów znajduje się w
     $CHECK_SOL_DIR/README.md
 
-check_sol v${VERSION} (${DATE}), cc-by/beerware quezak@gmail.com
+check_sol v${VERSION} (${DATE}), cc-by-nc/beerware quezak@gmail.com
 EOF
 }
 
@@ -66,6 +67,10 @@ function parse_args()
                     mem_limit=${mem_limit/M}
                     mem_limit=$[mem_limit*1024];
                 fi
+                shift;;
+            -M|--Mem-limit )
+                mem_limit=$2
+                mem_limit=$[mem_limit*1024];
                 shift;;
             -e|--no-errors ) 
                 stop_on_error=1;;

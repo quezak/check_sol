@@ -12,7 +12,7 @@
  * komentarz do błędów.
  *
  * Author: Artur Kozak, na podstawie standard_compare (autor nieznany)
- * v0.5 (20.11.2012), cc-by/beerware quezak@gmail.com
+ * v0.8 (20.11.2012), cc-by-nc/beerware quezak@gmail.com
  */
 
 #include <iostream>
