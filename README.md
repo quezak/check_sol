@@ -67,9 +67,10 @@ Parametry uruchomienia
 * `-o | --output KATALOG` katalog zawierający plik[i] wyjściowe. Muszą mieć nazwy identyczne
   z podanymi plikami wejściowymi oraz rozszerzenie `.out`. Parametr konieczny.
 * `-c | --compare PLIK` kod programu sprawdzającego zgodność wyjść. Obecnie obsługiwany jest tylko 
-  format .cpp. Jeśli nie zostanie podany ten parametr ani `-C`, zostanie użyta domyślna 
+  format .cpp (aczkolwiek można dostarczyć inny przez `-C`). 
+  Jeśli nie zostanie podany ten parametr ani `-C`, zostanie użyta domyślna 
   sprawdzaczka, określona w pliku konfiguracyjnym. Aby dowiedzieć się, jak powinien wyglądać 
-  program sprawdzający, przeczytaj komentarz na początku `standard_compare.cpp`.
+  program sprawdzający, przeczytaj komentarz na początku `default_compare.cpp` w katalogu instalacyjnym.
 * `-C | --comp-exec PLIK` skompilowany program sprawdzający zgodność wyjść.
 * `-e | --no-errors` powoduje zatrzymanie sprawdzania po pierwszym błędnym teście.
 * `-m | --mem-limit LICZBA` ustawia limit pamięci dla programu na `LICZBA` kilobajtów (lub `LICZBA`
@@ -146,13 +147,21 @@ GEN_TESTS_PARAMS=("123 4" "950 10" "1209 50" "5392 123" "2 500000")
 ```
 
 
+Plik konfiguracyjny
+-------------------
+W katalogu instalacyjnym znajduje się plik `check_sol.cfg`. Można w nim ustawić domyślne 
+kompilatory i ich flagi oraz nieco skonfigurować kolory i szerokość wyjścia skryptu.
+
+
 Znane błędy
 -----------
-* W czasie sprawdzeń nie powinien być uruchomiony inny program o nazwie identycznej ze sprawdzanym.
+* W czasie sprawdzeń nie powinien być uruchomiony inny program o nazwie identycznej ze sprawdzanym
+  (gdzie programy kompilowane przez `check_sol` mają rozszerzenie `.e`.
 * Program (z zamierzenia) nie jest całkowicie idiotoodporny -- argumenty wykonania powinny być użyte
   zgodnie z przeznaczeniem.
 
-Znalezione błędy można zgłaszać przez GitHub: `https://github.com/quezak/check_sol/issues`
+Znalezione błędy, jak i sugestie nowych funkcjonalności można zgłaszać przez GitHub: 
+`https://github.com/quezak/check_sol/issues`
 
 Changelog
 ---------
