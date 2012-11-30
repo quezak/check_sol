@@ -159,6 +159,8 @@ Znane błędy
   (gdzie programy kompilowane przez `check_sol` mają rozszerzenie `.e`.
 * Program (z zamierzenia) nie jest całkowicie idiotoodporny -- argumenty wykonania powinny być użyte
   zgodnie z przeznaczeniem.
+* Przerwanie programu sygnałem SIGABRT wykrywane jest jako przekroczenie limitu pamięci, gdzie prawdziwa
+  jest implikacja w lewo -- ten sygnał pojawia się też np. po niezłapanym wyjątku...
 
 Znalezione błędy, jak i sugestie nowych funkcjonalności można zgłaszać przez GitHub: 
 `https://github.com/quezak/check_sol/issues`
