@@ -1,6 +1,8 @@
 CheckSol
 ========
 
+![Example screenshot](check_sol_example.png)
+
 Co to jest?
 -----------
 check\_sol -- Skrypt do automatycznego sprawdzania poprawności programów, tj. zgodności wyjścia
